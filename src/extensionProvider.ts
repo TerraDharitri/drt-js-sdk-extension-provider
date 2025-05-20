@@ -1,5 +1,9 @@
-import { IPlainTransactionObject, Message, Address } from "@terradharitri/sdk-core";
-import { Transaction } from "@terradharitri/sdk-core/out/transaction";
+import {
+  Address,
+  IPlainTransactionObject,
+  Message,
+  Transaction,
+} from "@terradharitri/sdk-core";
 import {
   ErrAccountNotConnected,
   ErrCannotSignSingleTransaction,
@@ -8,7 +12,11 @@ import { Operation } from "./operation";
 
 declare global {
   interface Window {
+    /**
+     * @deprecated `numbatWallet` will be deprecated in future versions. Please use `dharitriWallet` instead for future compatibility.
+     */
     numbatWallet: { extensionId: string };
+    dharitriWallet: { extensionId: string };
   }
 }
 
@@ -41,7 +49,9 @@ export class ExtensionProvider {
   }
 
   async init(): Promise<boolean> {
-    if (window && window.numbatWallet) {
+    // Note: `numbatWallet` will be deprecated in future versions.
+    // Please use `dharitriWallet` instead for future compatibility.
+    if (window && (window.numbatWallet || window.dharitriWallet)) {
       this.initialized = true;
     }
     return this.initialized;
@@ -143,7 +153,7 @@ export class ExtensionProvider {
     try {
       const transactionsResponse = extensionResponse.map(
         (transaction: IPlainTransactionObject) =>
-          Transaction.fromPlainObject(transaction)
+          Transaction.newFromPlainObject(transaction)
       );
 
       return transactionsResponse;
@@ -168,10 +178,11 @@ export class ExtensionProvider {
 
     return new Message({
       data: Buffer.from(messageToSign.data),
-      address: messageToSign.address ?? Address.fromBech32(this.account.address),
+      address:
+        messageToSign.address ?? Address.newFromBech32(this.account.address),
       signer: "extension",
       version: messageToSign.version,
-      signature
+      signature,
     });
   }
 
